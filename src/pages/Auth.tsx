@@ -36,35 +36,29 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: `+91${phone}`,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: "Failed to Send Code",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
+    // Demo mode - simulate OTP send
+    setTimeout(() => {
+      setLoading(false);
       setStep("otp");
       toast({
         title: "Code Sent",
-        description: `Verification code sent to +91 ${phone}`,
+        description: `Demo: Use any 6-digit code to verify`,
       });
-    }
+    }, 1000);
   };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.verifyOtp({
-      phone: `+91${phone}`,
-      token: otp,
-      type: 'sms',
+    // Demo mode - accept any OTP and create anonymous session
+    const { error } = await supabase.auth.signInAnonymously({
+      options: {
+        data: {
+          phone: `+91${phone}`,
+          demo_mode: true
+        }
+      }
     });
 
     setLoading(false);
