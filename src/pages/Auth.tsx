@@ -4,16 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Lock, Shield } from "lucide-react";
+import { ArrowLeft, Phone, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [step, setStep] = useState<"email" | "password">("email");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -34,57 +32,52 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          full_name: fullName,
-        },
-      },
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: `+91${phone}`,
     });
 
     setLoading(false);
 
     if (error) {
       toast({
-        title: "Sign Up Failed",
+        title: "Failed to Send Code",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setStep("otp");
+      toast({
+        title: "Code Sent",
+        description: `Verification code sent to +91 ${phone}`,
+      });
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.auth.verifyOtp({
+      phone: `+91${phone}`,
+      token: otp,
+      type: 'sms',
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Verification Failed",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
         title: "Welcome to SmartChair!",
-        description: "Your account has been created successfully.",
-      });
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Welcome Back!",
         description: "You've successfully signed in.",
       });
     }
@@ -113,165 +106,38 @@ const Auth = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">
-                {isLogin ? "Sign In" : "Create Account"}
+                {step === "phone" ? "Sign In" : "Verify Code"}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {isLogin
-                  ? "Welcome back! Sign in to continue"
-                  : "Join SmartChair for accessible airport mobility"}
+                {step === "phone"
+                  ? "Enter your phone number to continue"
+                  : "Enter the verification code sent to your phone"}
               </p>
             </div>
           </div>
 
-          {isLogin && step === "email" ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (email) {
-                  setStep("password");
-                }
-              }}
-              className="space-y-6"
-            >
+          {step === "phone" ? (
+            <form onSubmit={handleSendOTP} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="flex gap-2">
+                  <div className="flex items-center px-3 bg-muted rounded-xl text-sm font-medium">
+                    +91
+                  </div>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 text-base rounded-xl"
-                    required
+                    id="phone"
+                    type="tel"
+                    placeholder="0000000000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className="flex-1 h-12 text-base rounded-xl"
+                    maxLength={10}
                     autoFocus
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="glow"
-                size="lg"
-                className="w-full"
-                disabled={!email}
-              >
-                Continue
-              </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(false)}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Don't have an account? Sign up
-                </button>
-              </div>
-            </form>
-          ) : isLogin && step === "password" ? (
-            <motion.form
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onSubmit={handleLogin}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="email-display" className="text-sm text-muted-foreground">
-                  Signing in as
-                </Label>
-                <div className="text-base font-medium">{email}</div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 text-base rounded-xl"
                     required
-                    minLength={6}
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="glow"
-                size="lg"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? "Please wait..." : "Sign In"}
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setStep("email");
-                  setPassword("");
-                }}
-                className="w-full"
-              >
-                Change Email
-              </Button>
-            </motion.form>
-          ) : (
-            <form onSubmit={handleSignUp} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="h-12 text-base rounded-xl"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 text-base rounded-xl"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 text-base rounded-xl"
-                    required
-                    minLength={6}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters
+                  We'll send a verification code to this number
                 </p>
               </div>
 
@@ -280,31 +146,70 @@ const Auth = () => {
                 variant="glow"
                 size="lg"
                 className="w-full"
-                disabled={loading}
+                disabled={phone.length !== 10 || loading}
               >
-                {loading ? "Please wait..." : "Create Account"}
+                <Phone className="w-4 h-4 mr-2" />
+                {loading ? "Sending..." : "Send Verification Code"}
               </Button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(true);
-                    setStep("email");
-                    setEmail("");
-                    setPassword("");
-                    setFullName("");
-                  }}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Already have an account? Sign in
-                </button>
-              </div>
 
               <p className="text-xs text-center text-muted-foreground">
                 By continuing, you agree to our Terms & Conditions and Privacy Policy
               </p>
             </form>
+          ) : (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onSubmit={handleVerifyOTP}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="phone-display" className="text-sm text-muted-foreground">
+                  Code sent to
+                </Label>
+                <div className="text-base font-medium">+91 {phone}</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="otp">Verification Code</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  className="h-12 text-center text-2xl tracking-widest rounded-xl"
+                  maxLength={6}
+                  autoFocus
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the 6-digit code we sent you
+                </p>
+              </div>
+
+              <Button
+                type="submit"
+                variant="glow"
+                size="lg"
+                className="w-full"
+                disabled={otp.length !== 6 || loading}
+              >
+                {loading ? "Verifying..." : "Verify & Continue"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setStep("phone");
+                  setOtp("");
+                }}
+                className="w-full"
+              >
+                Change Phone Number
+              </Button>
+            </motion.form>
           )}
         </div>
       </motion.div>
