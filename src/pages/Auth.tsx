@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [step, setStep] = useState<"email" | "password">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -122,8 +123,109 @@ const Auth = () => {
             </div>
           </div>
 
-          <form onSubmit={isLogin ? handleLogin : handleSignUp} className="space-y-6">
-            {!isLogin && (
+          {isLogin && step === "email" ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (email) {
+                  setStep("password");
+                }
+              }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-12 text-base rounded-xl"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                variant="glow"
+                size="lg"
+                className="w-full"
+                disabled={!email}
+              >
+                Continue
+              </Button>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(false)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Don't have an account? Sign up
+                </button>
+              </div>
+            </form>
+          ) : isLogin && step === "password" ? (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onSubmit={handleLogin}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="email-display" className="text-sm text-muted-foreground">
+                  Signing in as
+                </Label>
+                <div className="text-base font-medium">{email}</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-12 text-base rounded-xl"
+                    required
+                    minLength={6}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                variant="glow"
+                size="lg"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? "Please wait..." : "Sign In"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setStep("email");
+                  setPassword("");
+                }}
+                className="w-full"
+              >
+                Change Email
+              </Button>
+            </motion.form>
+          ) : (
+            <form onSubmit={handleSignUp} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -133,80 +235,77 @@ const Auth = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="h-12 text-base rounded-xl"
-                  required={!isLogin}
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 text-base rounded-xl"
                   required
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 text-base rounded-xl"
-                  required
-                  minLength={6}
-                />
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-12 text-base rounded-xl"
+                    required
+                  />
+                </div>
               </div>
-              {!isLogin && (
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-12 text-base rounded-xl"
+                    required
+                    minLength={6}
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Password must be at least 6 characters
                 </p>
-              )}
-            </div>
+              </div>
 
-            <Button
-              type="submit"
-              variant="glow"
-              size="lg"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-            </Button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setEmail("");
-                  setPassword("");
-                  setFullName("");
-                }}
-                className="text-sm text-primary hover:underline"
+              <Button
+                type="submit"
+                variant="glow"
+                size="lg"
+                className="w-full"
+                disabled={loading}
               >
-                {isLogin
-                  ? "Don't have an account? Sign up"
-                  : "Already have an account? Sign in"}
-              </button>
-            </div>
+                {loading ? "Please wait..." : "Create Account"}
+              </Button>
 
-            <p className="text-xs text-center text-muted-foreground">
-              By continuing, you agree to our Terms & Conditions and Privacy Policy
-            </p>
-          </form>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(true);
+                    setStep("email");
+                    setEmail("");
+                    setPassword("");
+                    setFullName("");
+                  }}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+
+              <p className="text-xs text-center text-muted-foreground">
+                By continuing, you agree to our Terms & Conditions and Privacy Policy
+              </p>
+            </form>
+          )}
         </div>
       </motion.div>
     </div>
