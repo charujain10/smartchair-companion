@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Accessibility, MapPin, Shield, Zap, Users, Clock } from "lucide-react";
+import { Accessibility, MapPin, Shield, Zap, Users, Clock, Heart, Volume2, Battery, UserPlus, Star, Bell } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -10,22 +10,42 @@ const Index = () => {
     {
       icon: MapPin,
       title: "Smart Navigation",
-      description: "AI-powered routing through complex airport terminals",
+      description: "AI-powered accessible routing with ramps, elevators & smooth paths",
     },
     {
-      icon: Zap,
-      title: "Instant Booking",
-      description: "Book your ride in seconds with real-time availability",
+      icon: Heart,
+      title: "Family Sharing",
+      description: "Real-time tracking for caregivers and loved ones",
+    },
+    {
+      icon: Bell,
+      title: "Emergency SOS",
+      description: "Instant alerts to airport security and emergency contacts",
+    },
+    {
+      icon: Volume2,
+      title: "Voice Control",
+      description: "Hands-free operation with natural voice commands",
+    },
+    {
+      icon: Star,
+      title: "Accessibility Ratings",
+      description: "Detailed ratings for pathways, facilities & services",
+    },
+    {
+      icon: Battery,
+      title: "Battery Monitoring",
+      description: "Real-time battery status & charging station locations",
+    },
+    {
+      icon: UserPlus,
+      title: "Companion Mode",
+      description: "Coordinate with travel companions & airport assistance",
     },
     {
       icon: Shield,
-      title: "Safety First",
-      description: "Emergency alerts and live monitoring for your peace of mind",
-    },
-    {
-      icon: Clock,
-      title: "24/7 Service",
-      description: "Round-the-clock assistance whenever you need it",
+      title: "Pre-booking",
+      description: "Schedule rides with special requirements in advance",
     },
   ];
 
@@ -47,7 +67,7 @@ const Index = () => {
           >
             <Accessibility className="w-6 h-6 text-primary" />
             <span className="text-sm font-semibold text-muted-foreground">
-              Empowering Independence
+              Empowering Independence & Accessibility
             </span>
           </motion.div>
 
@@ -59,7 +79,7 @@ const Index = () => {
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto text-balance">
-            Your autonomous mobility companion for seamless airport navigation. Travel with confidence, comfort, and complete independence.
+            Breaking barriers, not spirits. Your autonomous wheelchair companion designed for true accessibility, independence, and dignity in airport travel.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -87,7 +107,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-24"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-24 max-w-7xl mx-auto"
         >
           {features.map((feature, index) => (
             <motion.div
