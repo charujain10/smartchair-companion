@@ -1,38 +1,91 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSendOTP = (e: React.FormEvent) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/book-ride");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        navigate("/book-ride");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length === 10) {
-      setStep("otp");
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          full_name: fullName,
+        },
+      },
+    });
+
+    setLoading(false);
+
+    if (error) {
       toast({
-        title: "OTP Sent",
-        description: `Verification code sent to +91 ${phone}`,
+        title: "Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Welcome to SmartChair!",
+        description: "Your account has been created successfully.",
       });
     }
   };
 
-  const handleVerifyOTP = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length === 6) {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setLoading(false);
+
+    if (error) {
       toast({
-        title: "Welcome to SmartChair!",
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Welcome Back!",
         description: "You've successfully signed in.",
       });
-      navigate("/book-ride");
     }
   };
 
@@ -58,94 +111,102 @@ const Auth = () => {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Sign In</h1>
+              <h1 className="text-2xl font-bold">
+                {isLogin ? "Sign In" : "Create Account"}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                Quick & secure verification
+                {isLogin
+                  ? "Welcome back! Sign in to continue"
+                  : "Join SmartChair for accessible airport mobility"}
               </p>
             </div>
           </div>
 
-          {step === "phone" ? (
-            <form onSubmit={handleSendOTP} className="space-y-6">
+          <form onSubmit={isLogin ? handleLogin : handleSignUp} className="space-y-6">
+            {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="flex gap-2">
-                  <div className="flex items-center px-3 bg-muted rounded-xl text-sm font-medium">
-                    +91
-                  </div>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="0000000000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="flex-1 h-12 text-base rounded-xl"
-                    maxLength={10}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  We'll text a code to verify your phone number
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                variant="glow"
-                size="lg"
-                className="w-full"
-                disabled={phone.length !== 10}
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                Send Verification Code
-              </Button>
-
-              <p className="text-xs text-center text-muted-foreground">
-                By continuing, you agree to our Terms & Conditions and Privacy Policy
-              </p>
-            </form>
-          ) : (
-            <motion.form
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onSubmit={handleVerifyOTP}
-              className="space-y-6"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="otp">Enter Verification Code</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                  id="otp"
+                  id="fullName"
                   type="text"
-                  placeholder="000000"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  className="h-12 text-center text-2xl tracking-widest rounded-xl"
-                  maxLength={6}
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="h-12 text-base rounded-xl"
+                  required={!isLogin}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Code sent to +91 {phone}
-                </p>
               </div>
+            )}
 
-              <Button
-                type="submit"
-                variant="glow"
-                size="lg"
-                className="w-full"
-                disabled={otp.length !== 6}
-              >
-                Verify & Continue
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-12 text-base rounded-xl"
+                  required
+                />
+              </div>
+            </div>
 
-              <Button
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 h-12 text-base rounded-xl"
+                  required
+                  minLength={6}
+                />
+              </div>
+              {!isLogin && (
+                <p className="text-xs text-muted-foreground">
+                  Password must be at least 6 characters
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              variant="glow"
+              size="lg"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+            </Button>
+
+            <div className="text-center">
+              <button
                 type="button"
-                variant="ghost"
-                onClick={() => setStep("phone")}
-                className="w-full"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setEmail("");
+                  setPassword("");
+                  setFullName("");
+                }}
+                className="text-sm text-primary hover:underline"
               >
-                Change Phone Number
-              </Button>
-            </motion.form>
-          )}
+                {isLogin
+                  ? "Don't have an account? Sign up"
+                  : "Already have an account? Sign in"}
+              </button>
+            </div>
+
+            <p className="text-xs text-center text-muted-foreground">
+              By continuing, you agree to our Terms & Conditions and Privacy Policy
+            </p>
+          </form>
         </div>
       </motion.div>
     </div>
