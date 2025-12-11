@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# SmartChair
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/6f6c4009-957e-4a50-b2e3-1ae233a626fd
+**URL**: [https://lovable.dev/projects/6f6c4009-957e-4a50-b2e3-1ae233a626fd](https://mobility-mentor-pro.lovable.app)
 
 ## How can I edit this code?
 
