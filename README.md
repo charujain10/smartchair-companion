@@ -224,7 +224,7 @@ This project is proprietary software developed for airport mobility services.
 ## 🔗 Links
 
 - **Live App**: [SmartChair](https://mobility-mentor-pro.lovable.app)
-- **Lovable Project**: [Edit in Lovable](https://lovable.dev/projects/6f6c4009-957e-4a50-b2e3-1ae233a626fd)
+
 
 ---
 
